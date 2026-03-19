@@ -1,2 +1,7 @@
 # json
-JSON utilities for fast serialization and response handling.
+
+Header-only C++ library scaffold.
+
+```bash
+vix tests
+```
