@@ -1,15 +1,18 @@
 {
   "name": "json",
-  "namespace": "gaspardkirira",
+  "namespace": "cnerium",
   "version": "0.1.0",
   "type": "header-only",
   "include": "include",
-  "license": "MIT",
-  "description": "A tiny header-only C++ library.",
+  "license": "Apache-2.0",
+  "description": "High-performance header-only JSON parser and serializer for C++20.",
   "keywords": [
-    "cpp",
+    "json",
+    "c++",
     "header-only",
-    "vix"
+    "parser",
+    "serialization",
+    "performance"
   ],
   "repository": "https://github.com/Gaspardkirira/json",
   "authors": [

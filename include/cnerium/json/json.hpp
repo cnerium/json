@@ -3,8 +3,9 @@
  * @brief cnerium::json — High-performance, header-only JSON library for C++20
  *
  * @version 1.0.0
- * @author cnerium contributors
- * @copyright Apache-2.0 License
+ * @author Gaspard Kirira
+ * @copyright (c) 2026 Gaspard Kirira
+ * @license MIT
  *
  * @details
  * A production-grade JSON library designed for high-throughput HTTP servers
