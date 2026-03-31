@@ -1070,8 +1070,8 @@ void test_parse_buf_len()
   suite("parse(const char*, size_t)");
 
   const char *buf = "{\"n\":7}trailing_garbage";
-  auto v = parse(buf, 8);
-
+  // "{\"n\":7}" = exactement 7 octets
+  auto v = parse(buf, 7);
   OK(v["n"].as_integer() == 7);
 }
 

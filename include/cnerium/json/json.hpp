@@ -2597,12 +2597,18 @@ namespace cnerium::json
   class streaming_parser
   {
     std::string buffer_;
+
     int brace_depth_{0};
     int bracket_depth_{0};
+
     bool in_string_{false};
     bool escape_next_{false};
+
     bool started_{false};
     char root_char_{'\0'};
+
+    std::size_t complete_pos_{0};
+    std::size_t consumed_pos_{0};
 
   public:
     streaming_parser() { buffer_.reserve(4096); }
@@ -2614,16 +2620,26 @@ namespace cnerium::json
      */
     std::optional<value> feed(const char *data, std::size_t len)
     {
+      if (consumed_pos_ > 0)
+      {
+        buffer_.erase(0, consumed_pos_);
+        consumed_pos_ = 0;
+      }
+
+      const std::size_t old_size = buffer_.size();
       buffer_.append(data, len);
 
       for (std::size_t i = 0; i < len; ++i)
       {
-        char c = data[i];
+        const char c = data[i];
+        const std::size_t abs_pos = old_size + i;
+
         if (escape_next_)
         {
           escape_next_ = false;
           continue;
         }
+
         if (in_string_)
         {
           if (c == '\\')
@@ -2632,17 +2648,29 @@ namespace cnerium::json
             in_string_ = false;
           continue;
         }
+
         if (c == '"')
         {
           in_string_ = true;
+          continue;
         }
+
         if (!started_)
         {
           if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
             continue;
+
           started_ = true;
           root_char_ = c;
+
+          if (root_char_ == '{')
+            brace_depth_ = 1;
+          else if (root_char_ == '[')
+            bracket_depth_ = 1;
+
+          continue;
         }
+
         if (root_char_ == '{')
         {
           if (c == '{')
@@ -2651,7 +2679,10 @@ namespace cnerium::json
           {
             --brace_depth_;
             if (brace_depth_ == 0)
+            {
+              complete_pos_ = abs_pos + 1;
               return try_complete();
+            }
           }
         }
         else if (root_char_ == '[')
@@ -2662,28 +2693,26 @@ namespace cnerium::json
           {
             --bracket_depth_;
             if (bracket_depth_ == 0)
+            {
+              complete_pos_ = abs_pos + 1;
               return try_complete();
+            }
           }
-        }
-        else
-        {
-          // Scalar root; ended by whitespace or end of data
-          // Will be handled at end of buffer
         }
       }
 
-      // For scalar roots, attempt parse when buffer seems complete
       if (started_ && root_char_ != '{' && root_char_ != '[')
       {
-        // Try parsing the accumulated buffer
         try
         {
           auto v = parse(buffer_);
+          consumed_pos_ = buffer_.size();
+          reset_state_only();
           return v;
         }
         catch (...)
         {
-          return std::nullopt; // incomplete
+          return std::nullopt;
         }
       }
 
@@ -2694,29 +2723,53 @@ namespace cnerium::json
     void reset()
     {
       buffer_.clear();
+
       brace_depth_ = 0;
       bracket_depth_ = 0;
+
       in_string_ = false;
       escape_next_ = false;
+
       started_ = false;
       root_char_ = '\0';
+
+      complete_pos_ = 0;
+      consumed_pos_ = 0;
     }
 
     /// @brief Access raw accumulated buffer.
-    [[nodiscard]] std::string_view raw_buffer() const noexcept { return buffer_; }
+    [[nodiscard]] std::string_view raw_buffer() const noexcept
+    {
+      return buffer_;
+    }
 
   private:
+    void reset_state_only() noexcept
+    {
+      brace_depth_ = 0;
+      bracket_depth_ = 0;
+
+      in_string_ = false;
+      escape_next_ = false;
+
+      started_ = false;
+      root_char_ = '\0';
+
+      complete_pos_ = 0;
+    }
+
     std::optional<value> try_complete()
     {
-      try
-      {
-        auto v = parse(buffer_);
-        return v;
-      }
-      catch (const parse_error &)
-      {
-        throw; // propagate
-      }
+      if (complete_pos_ == 0 || complete_pos_ > buffer_.size())
+        return std::nullopt;
+
+      value v = parse(std::string_view(buffer_.data(), complete_pos_));
+
+      consumed_pos_ = complete_pos_;
+
+      reset_state_only();
+
+      return v;
     }
   };
 
