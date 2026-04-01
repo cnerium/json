@@ -8,22 +8,13 @@ project(cnerium_json
 
 include(GNUInstallDirs)
 
-# ========================
-# Options
-# ========================
-option(CNERIUM_JSON_BUILD_TESTS "Build json tests" ON)
-option(CNERIUM_JSON_BUILD_EXAMPLES "Build json examples" ON)
+option(CNERIUM_JSON_BUILD_TESTS "Build json tests" OFF)
+option(CNERIUM_JSON_BUILD_EXAMPLES "Build json examples" OFF)
 
-# ========================
-# Global settings
-# ========================
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# ========================
-# Library (header-only)
-# ========================
 add_library(cnerium_json INTERFACE)
 add_library(cnerium::json ALIAS cnerium_json)
 
@@ -35,32 +26,20 @@ target_include_directories(cnerium_json
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-# ========================
-# Compiler options
-# ========================
 if(MSVC)
     target_compile_options(cnerium_json INTERFACE /W4 /permissive-)
 else()
     target_compile_options(cnerium_json INTERFACE -Wall -Wextra -Wpedantic)
 endif()
 
-# ========================
-# Target properties
-# ========================
 set_target_properties(cnerium_json PROPERTIES
     EXPORT_NAME json
 )
 
-# ========================
-# Examples
-# ========================
 if(CNERIUM_JSON_BUILD_EXAMPLES AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/CMakeLists.txt")
     add_subdirectory(examples)
 endif()
 
-# ========================
-# Tests
-# ========================
 if(CNERIUM_JSON_BUILD_TESTS)
     include(CTest)
     enable_testing()
@@ -80,9 +59,6 @@ if(CNERIUM_JSON_BUILD_TESTS)
     endif()
 endif()
 
-# ========================
-# Summary
-# ========================
 message(STATUS "------------------------------------------------------")
 message(STATUS "cnerium::json configured (${PROJECT_VERSION})")
 message(STATUS "Include dir:     ${CMAKE_CURRENT_SOURCE_DIR}/include")
