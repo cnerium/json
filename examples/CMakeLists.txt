@@ -5,9 +5,10 @@ foreach(example ${EXAMPLE_SOURCES})
 
     add_executable(${example_name} ${example})
 
-    target_link_libraries(${example_name} PRIVATE json::json)
+    target_link_libraries(${example_name} PRIVATE cnerium::json)
+    target_compile_features(${example_name} PRIVATE cxx_std_20)
 
-    if (MSVC)
+    if(MSVC)
         target_compile_options(${example_name} PRIVATE /W4 /permissive-)
     else()
         target_compile_options(${example_name} PRIVATE -Wall -Wextra -Wpedantic)
